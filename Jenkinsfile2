@@ -56,7 +56,7 @@ pipeline {
                     // Archiver les artefacts
                     archiveArtifacts artifacts: 'allure-results/**', fingerprint: true
                     // Générer le rapport Allure (option allowEmptyResults pour éviter blocage)
-                    allure results: [[path: 'allure-results']], allowEmptyResults: true
+                    allure results: [[path: 'allure-results']]
                 }
             }
         }
