@@ -1,0 +1,61 @@
+pipeline {
+    agent {
+        docker {
+            image 'mcr.microsoft.com/playwright:v1.58.2-noble'
+            args '-u root --entrypoint='
+        }
+    }
+
+    parameters {
+        choice(name: 'BROWSER', choices: ['chromium', 'firefox', 'webkit'], description: 'Choisir le navigateur pour les tests')
+        booleanParam(name: 'ALLURE', defaultValue: false, description: 'Générer le rapport Allure ou pas')
+        choice(name:'TAG', choices: ['@regression', '@smoke', '@e2e'], description: 'Choisir le tag pour les tests')
+    }
+
+    stages {
+        stage('Install dependencies') {
+            steps {
+                echo 'Installation des dépendances...'
+                sh 'npm --version'
+                sh 'npm install'
+                // Les navigateurs sont déjà inclus dans l'image Docker
+                sh 'npx playwright install-deps || true'
+            }
+        }
+
+        stage('Run Tests') {
+            steps {
+                script {
+                    // Définir le reporter Allure si coché
+                    def reporter = params.ALLURE ? "--reporter=allure-playwright" : ""
+
+                    // Lancer les tests Playwright
+                    sh "npx playwright test --project=${params.BROWSER} --grep ${params.TAG} ${reporter}"
+
+                    // Stash les résultats Allure si activé (même si vide)
+                    if(params.ALLURE){
+                        stash name: 'allure-results', includes: 'allure-results/**', allowEmpty: true
+                    }
+                }
+            }
+        }
+    }
+
+    post {
+        always {
+            script {
+                if(params.ALLURE){
+                    echo "Génération du rapport Allure..."
+                    // Supprimer l'ancien dossier
+                    sh 'rm -rf allure-results'
+                    // Récupérer les résultats stashés
+                    unstash 'allure-results'
+                    // Archiver les artefacts
+                    archiveArtifacts artifacts: 'allure-results/**', fingerprint: true
+                    // Générer le rapport Allure (option allowEmptyResults pour éviter blocage)
+                    allure results: [[path: 'allure-results']], allowEmptyResults: true
+                }
+            }
+        }
+    }
+}
