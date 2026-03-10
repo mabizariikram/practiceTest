@@ -1,11 +1,17 @@
 pipeline {
-    agent any
+    agent{
+                docker{
+                    image 'mcr.microsoft.com/playwright:v1.54.0-noble'
+                    args '-u root --entrypoint='
+                }
+            }
 
     stages {
         stage('Build') {
             steps {
                 echo 'Building...'
                 // Add your build commands here
+                sh 'npm --version'
             }
         }
         stage('Test') {
