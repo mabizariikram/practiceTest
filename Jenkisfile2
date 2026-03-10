@@ -5,6 +5,9 @@ pipeline {
             args '-u root --entrypoint='
         }
     }
+    tools {
+        allure 'allure'
+    }
 
     parameters {
         choice(name: 'BROWSER', choices: ['chromium', 'firefox', 'webkit'], description: 'Choisir le navigateur pour les tests')
