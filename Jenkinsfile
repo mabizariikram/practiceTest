@@ -38,15 +38,18 @@ pipeline {
                     switch (params.BROWSER) {
                         case "chromium":
                                 if(params.ALLURE){
+                                
                                 sh "npx playwright test --project=chromium --grep ${params.TAG} --reporter=allure-playwright"
+                                stash name: 'allure-results', includes: 'allure-results/**'
                             }   else {
                                 sh "npx playwright test --project=chromium --grep ${params.TAG}"
-                                
+                                stash name: 'allure-results', includes: 'allure-results/**'
                             }
                                 break;
                         case "firefox":
                             if(params.ALLURE){
                                 sh "npx playwright test --project=firefox --grep ${params.TAG} --reporter=allure-playwright"
+                                stash name: 'allure-results', includes: 'allure-results/**'
                             }   else {  
                             sh "npx playwright test --project=firefox --grep ${params.TAG}"
                             }
@@ -55,6 +58,7 @@ pipeline {
                         default :
                         if(params.ALLURE){
                                 sh "npx playwright test --project=webkit --grep ${params.TAG} --reporter=allure-playwright"
+                                stash name: 'allure-results', includes: 'allure-results/**'
                             }   else {
                             sh "npx playwright test --project=webkit --grep ${params.TAG}"
                             }
@@ -68,4 +72,23 @@ pipeline {
         }
         
     }
+
+    post {
+        always {
+            script {
+                //verifier si le rapport allure doit etre genere
+                if(params.ALLURE) {
+                     
+                        //restaurer la copie de allure-results
+                        sh 'rm -rf allure-results'
+                        //recuperer les resultats stashés dans allure-results
+                        unstash 'allure-results'
+                        //archiver les resultats et generer le rapport allure
+                        archiveArtifacts artifacts: 'allure-results/**', fingerprint: true
+                        allure results: [[path: 'allure-results']]
+                  
+                }
+            }
+        }
+}
 }
