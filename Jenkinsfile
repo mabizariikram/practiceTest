@@ -8,6 +8,13 @@ pipeline {
                     
                 }
             }
+            //ajout des paramètres pour le pipeline
+    parameters {
+        choice(name: 'BROWSER', choices: ['chromium', 'firefox', 'webkit'], description: 'choisir le navigateur pour les tests ')
+        booleanParam(name: 'ALLURE', defaultValue:false, description: 'choisir si on veut générer le rapport allure ou pas  ')
+        choice(name:'TAG', choices: ['@regression', '@smoke', '@e2e'], description: 'choisir le tag pour les tests ')
+        }
+
 
     stages {
         stage('install dependencies') {
@@ -26,7 +33,37 @@ pipeline {
             steps {
                 echo 'Testing...'
                 // lancer les tests avec playwright
-                sh "npx playwright test"
+                //sh "npx playwright test"
+                script{
+                    switch (params.BROWSER) {
+                        case "chromium":
+                                if(params.ALLURE){
+                                sh "npx playwright test --project=chromium --grep ${params.TAG} --reporter=allure-playwright"
+                            }   else {
+                                sh "npx playwright test --project=chromium --grep ${params.TAG}"
+                                
+                            }
+                                break;
+                        case "firefox":
+                            if(params.ALLURE){
+                                sh "npx playwright test --project=firefox --grep ${params.TAG} --reporter=allure-playwright"
+                            }   else {  
+                            sh "npx playwright test --project=firefox --grep ${params.TAG}"
+                            }
+                            break;
+
+                        default :
+                        if(params.ALLURE){
+                                sh "npx playwright test --project=webkit --grep ${params.TAG} --reporter=allure-playwright"
+                            }   else {
+                            sh "npx playwright test --project=webkit --grep ${params.TAG}"
+                            }
+                            break;
+
+                       
+                    }
+                }
+                
             }
         }
         

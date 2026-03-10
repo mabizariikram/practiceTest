@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-test ("prendre commande", async ({ page }) => {
+test ("prendre commande", {tag: ['@regression', '@smoke',]} ,async ({ page }) => {
 // aller au site de shopping
   await page.goto("https://practiceautomatedtesting.com/shopping");
   // ajouter les produits 5 et 9 au panier
@@ -61,4 +61,15 @@ test ("prendre commande", async ({ page }) => {
     // assertion 3: Vérifier btn download 
     const downloadButton = page.locator('[data-testid="download-invoice"]');
     await expect(downloadButton).toBeVisible();
+});
+test ("prendre commande sans remplir le formulaire", {tag:'@regression'} ,async ({ page }) => {
+  
+});
+
+test ("prendre commande avec formulaire incomplet", {tag:'@smoke'} ,async ({ page }) => {
+  
+});
+
+test ("prendre commande avec formulaire complet", {tag:'@e2e'} ,async ({ page }) => {
+  
 });
