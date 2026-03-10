@@ -2,7 +2,8 @@ pipeline {
     agent{
                 docker{
                     //ajouter l'image docker de playwright(node,playwright,chromium,firefox,webkit)
-                    image 'mcr.microsoft.com/playwright:v1.54.0-noble'
+                    image 'mcr.microsoft.com/playwright:v1.58.2-noble'
+                    
                     args '-u root --entrypoint='
                     
                 }
@@ -16,6 +17,8 @@ pipeline {
                 sh 'npm --version'
                 // installer les dépendances du projet
                 sh "npm install"
+                // installer les navigateurs pour playwright
+                sh "npx playwright install"
 
             }
         }
