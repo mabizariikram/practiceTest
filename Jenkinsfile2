@@ -23,6 +23,7 @@ pipeline {
                 sh 'npm install'
                 // Les navigateurs sont déjà inclus dans l'image Docker
                 sh 'npx playwright install-deps || true'
+                sh 'allure generate allure-results -o allure-report --clean' archiveArtifacts artifacts: 'allure-report/**'
             }
         }
 
