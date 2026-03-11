@@ -49,7 +49,7 @@ pipeline {
         always {
             script {
                 if (params.REPORT) {
-                    // Publier le rapport HTML depuis le workspace principal
+                    // Publier le rapport HTML depuis le workspace correct
                     publishHTML(target: [
                         reportDir: "$WORKSPACE/playwright-report",
                         reportFiles: 'index.html',
