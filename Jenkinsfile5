@@ -46,7 +46,7 @@ pipeline {
         }
     }
 
-     post {
+        post {
         always {
             script {
                 dir('repoTEST_showreporter/playwright-report') {
