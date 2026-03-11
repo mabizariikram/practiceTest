@@ -12,7 +12,7 @@ pipeline {
             agent {
                 docker {
                     //Utilisation de l'image Docker pour Playwright
-                    image 'mcr.microsoft.com/playwright:v1.57.0-noble'
+                    image 'mcr.microsoft.com/playwright:v1.58.2-noble'
                     //donner les droits root et redefinir le entrypoint
                     args '-u root --entrypoint='
                 }
