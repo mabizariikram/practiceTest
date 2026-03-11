@@ -27,14 +27,15 @@ pipeline {
     }
     post {
         always {
-            dir('repoTEST_showreporter') {
-                publishHTML(target: [
-                    reportDir: 'playwright-report',  // relatif à repoTEST_showreporter
-                    reportFiles: 'index.html',
-                    reportName: 'Playwright HTML Report'
-                ])
-            }
+            publishHTML(target: [
+                reportDir: 'repoTEST_showreporter/playwright-report',  // chemin relatif complet
+                reportFiles: 'index.html',
+                reportName: 'Playwright HTML Report',
+                keepAll: true,
+                allowMissing: false
+            ])
         }
     }
+  
    
 }
