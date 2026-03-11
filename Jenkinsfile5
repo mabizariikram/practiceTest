@@ -6,10 +6,6 @@ pipeline {
         booleanParam(name: 'REPORT', defaultValue: true, description: 'Afficher le rapport Playwright')
     }
 
-    environment {
-        DOCKER_IMAGE = 'mcr.microsoft.com/playwright:v1.58.2-noble'
-    }
-
     stages {
         stage('Checkout') {
             steps {
@@ -26,17 +22,17 @@ pipeline {
             }
         }
 
-        stage('Run Tests in Docker') {
+        stage('Run Tests') {
             steps {
                 dir('repoTEST_showreporter') {
                     script {
                         // Supprime l'ancien rapport
                         sh 'rm -rf playwright-report'
 
-                        // Exécute les tests Playwright avec reporter HTML
-                        sh "docker run --rm -u $(id -u):$(id -g) -v \$(pwd):/work -w /work ${DOCKER_IMAGE} npx playwright test --grep ${params.TAG} --reporter=html"
+                        // Exécute les tests avec reporter HTML (simple)
+                        sh "npx playwright test --grep ${params.TAG} --reporter=html"
 
-                        // Copier le rapport vers le workspace principal
+                        // Copier le rapport vers le workspace Jenkins principal
                         sh 'cp -r playwright-report $WORKSPACE/playwright-report'
                     }
                 }
