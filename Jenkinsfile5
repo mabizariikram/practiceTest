@@ -24,16 +24,16 @@ pipeline {
             steps {
                 dir('repoTEST_showreporter') {
                     script {
-                        // Supprime l'ancien rapport
+                        // Supprime l'ancien rapport HTML
                         sh 'rm -rf playwright-report'
 
-                        // Exécute les tests Playwright dans Docker
+                        // Exécute les tests Playwright avec reporter HTML
                         sh """
                         docker run --rm -u $(id -u):$(id -g) -v \$(pwd):/work -w /work ${DOCKER_IMAGE} \
                         npx playwright test --grep @regression --reporter=html
                         """
 
-                        // Copier le rapport vers le workspace Jenkins pour qu'il soit accessible
+                        // Copier le rapport vers le workspace Jenkins
                         sh 'cp -r playwright-report $WORKSPACE/playwright-report'
                     }
                 }
@@ -43,12 +43,12 @@ pipeline {
 
     post {
         always {
-            // Publier le rapport HTML
+            // Publier le rapport HTML Playwright dans Jenkins
             publishHTML(target: [
                 reportDir: 'playwright-report',
                 reportFiles: 'index.html',
                 reportName: "Playwright HTML Report",
-                allowMissing: true,
+                allowMissing: false,
                 alwaysLinkToLastBuild: true
             ])
         }
