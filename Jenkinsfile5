@@ -1,0 +1,83 @@
+pipeline {
+    agent any
+
+    parameters {
+        choice(name: 'TAG', choices: ['@regression', '@smoke'])
+        booleanParam(name: 'REPORT', defaultValue: true, description: 'Afficher rapport Playwright')
+    }
+
+    stages {
+
+        stage('global stage') {
+
+            agent {
+                docker {
+                    image 'mcr.microsoft.com/playwright:v1.58.2-noble'
+                    args '-u root --entrypoint='
+                }
+            }
+
+            stages {
+
+                stage('Checkout') {
+                    steps {
+                        sh 'rm -rf repoTEST'
+                        sh 'git clone https://github.com/mabizariikram/practiceTest.git repoTEST'
+                    }
+                }
+
+                stage('install deps') {
+                    steps {
+                        dir('repoTEST_showreporter') {
+                            sh 'npm ci'
+                        }
+                    }
+                }
+
+                stage('run tests') {
+                    steps {
+
+                        dir('repoTEST_showreporter') {
+
+                            script {
+
+                                sh 'rm -rf playwright-report'
+
+                                sh "npx playwright test --grep ${params.TAG}"
+
+                            }
+
+                        }
+
+                    }
+                }
+
+            }
+
+        }
+
+    }
+
+    post {
+
+        always {
+
+            script {
+
+                if(params.REPORT){
+
+                    dir('repoTEST_showreporter'){
+
+                        archiveArtifacts artifacts: 'playwright-report/**', fingerprint: true
+
+                    }
+
+                }
+
+            }
+
+        }
+
+    }
+
+}
