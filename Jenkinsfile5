@@ -1,11 +1,12 @@
 pipeline {
     agent any
     parameters {
-        // variable pour choisir le tag de test
+        // Variable pour choisir le tag de test
         choice(name: 'TAG', choices: ['@regression', '@smoke'], description: 'Choisir quel tag exécuter')
-        // variable pour afficher le rapport Playwright HTML
+        // Variable pour afficher le rapport Playwright HTML
         booleanParam(name: 'REPORT', defaultValue: true, description: 'Afficher rapport Playwright HTML')
     }
+
     stages {
         stage('global stage') {
             agent {
@@ -17,12 +18,13 @@ pipeline {
             stages {
                 stage('Checkout') {
                     steps {
-                        // Supprimer le dossier repoTEST_showreporter s'il existe déjà
+                        // Supprimer le dossier s'il existe déjà
                         sh 'rm -rf repoTEST_showreporter'
-                        // Cloner le dépôt dans le dossier repoTEST_showreporter
+                        // Cloner le dépôt
                         sh 'git clone https://github.com/mabizariikram/practiceTest.git repoTEST_showreporter'
                     }
                 }
+
                 stage('Install Dependencies') {
                     steps {
                         dir('repoTEST_showreporter') {
@@ -30,6 +32,7 @@ pipeline {
                         }
                     }
                 }
+
                 stage('Run Tests') {
                     steps {
                         dir('repoTEST_showreporter') {
@@ -38,8 +41,6 @@ pipeline {
                                 sh 'rm -rf playwright-report'
                                 // Exécuter les tests Playwright avec HTML reporter
                                 sh "npx playwright test --grep ${params.TAG} --reporter=html"
-                                // Copier le rapport vers le workspace principal pour publishHTML
-                                sh "cp -r playwright-report $WORKSPACE/playwright-report"
                             }
                         }
                     }
@@ -47,14 +48,15 @@ pipeline {
             }
         }
     }
+
     post {
         always {
             script {
                 if(params.REPORT) {
-                    // Publier le rapport HTML Playwright
+                    // Publier le rapport HTML directement depuis le dossier généré
                     publishHTML(target: [
-                        reportDir: 'playwright-report',
-                        reportFiles: 'index.html',
+                        reportDir: "repoTEST_showreporter/playwright-report",
+                        reportFiles: "index.html",
                         reportName: "Playwright HTML Report",
                         allowMissing: true,
                         alwaysLinkToLastBuild: true
