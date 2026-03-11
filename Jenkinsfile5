@@ -36,7 +36,8 @@ pipeline {
                         dir('repoTEST_showreporter') {
                             script {
                                 sh 'rm -rf playwright-report'
-                                sh "npx playwright test --grep ${params.TAG} --reporter=html"
+                                // Forcer le dossier de sortie HTML
+                                sh "npx playwright test --grep ${params.TAG} --reporter=html=playwright-report"
                             }
                         }
                     }
@@ -50,6 +51,7 @@ pipeline {
             script {
                 if(params.REPORT){
                     dir('repoTEST_showreporter'){
+                        // Archiver le rapport Playwright
                         archiveArtifacts artifacts: 'playwright-report/**', fingerprint: true
                     }
                 }
