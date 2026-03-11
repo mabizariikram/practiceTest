@@ -13,12 +13,7 @@ pipeline {
     }
 
     stages {
-        stage('Clean workspace') {
-    steps {
-        sh 'rm -rf allure-results || true'
-        sh 'rm -rf allure-report || true'
-    }
-}
+   
 
         stage('Install dependencies') {
             steps {
