@@ -43,30 +43,22 @@ pipeline {
         }
     }
 
-    // post {
-    //     always {
-    //         script {
-    //             if(params.ALLURE){
-    //                 echo "Génération du rapport Allure..."
-    //                 // Supprimer l'ancien dossier
-    //                 sh 'rm -rf allure-results'
-    //                 // Récupérer les résultats stashés
-    //                 unstash 'allure-results'
-    //                 // Archiver les artefacts
-    //                 archiveArtifacts artifacts: 'allure-results/**', fingerprint: true
-    //                 // Générer le rapport Allure (option allowEmptyResults pour éviter blocage)
-    //                 allure results: [[path: 'allure-results']]
-    //             }
-    //         }
-    //     }
-    // }
-    post {
-    always {
-        script {
-            if(params.ALLURE){
-                allure results: [[path: 'allure-results']]
-            }
-        }
-    }
-}
+     post {
+         always {
+            script {
+                if(params.ALLURE){
+                    echo "Génération du rapport Allure..."
+                  // Supprimer l'ancien dossier
+                   sh 'rm -rf allure-results'
+                   // Récupérer les résultats stashés
+                    unstash 'allure-results'
+                   // Archiver les artefacts
+                    archiveArtifacts artifacts: 'allure-results/**', fingerprint: true
+                     // Générer le rapport Allure (option allowEmptyResults pour éviter blocage)
+                    allure results: [[path: 'allure-results']]
+                }
+             }
+       }
+     }
+  
 }
