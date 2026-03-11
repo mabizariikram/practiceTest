@@ -17,9 +17,7 @@ pipeline {
             stages {
                 stage('Checkout') {
                     steps {
-                        // Supprimer le dossier s'il existe déjà
                         sh 'rm -rf repoTEST_showreporter'
-                        // Cloner le dépôt dans le container
                         sh 'git clone https://github.com/mabizariikram/practiceTest.git repoTEST_showreporter'
                     }
                 }
@@ -35,25 +33,16 @@ pipeline {
                 stage('Run Tests') {
                     steps {
                         dir('repoTEST_showreporter') {
-                            script {
-                                sh 'rm -rf playwright-report'
-                                sh "npx playwright test --grep ${params.TAG} --reporter=html"
-                            }
+                            sh 'rm -rf playwright-report'
+                            sh "npx playwright test --grep ${params.TAG} --reporter=html"
                         }
                     }
                 }
 
                 stage('Copy Report to Main Workspace') {
                     steps {
-                        // Copier le rapport hors du container Docker vers le workspace principal
+                        // Copier uniquement le rapport HTML vers le workspace principal
                         sh 'cp -r repoTEST_showreporter/playwright-report $WORKSPACE/playwright-report'
-                    }
-                }
-
-                stage('Debug: lister workspace') {
-                    steps {
-                        sh 'echo "=== Contenu du workspace principal ==="'
-                        sh 'ls -R $WORKSPACE'
                     }
                 }
             }
@@ -64,7 +53,7 @@ pipeline {
         always {
             script {
                 if(params.REPORT) {
-                    // Publier le rapport HTML depuis le workspace principal
+                    // Publier uniquement le rapport HTML Playwright
                     publishHTML(target: [
                         reportDir: 'playwright-report',
                         reportFiles: 'index.html',
