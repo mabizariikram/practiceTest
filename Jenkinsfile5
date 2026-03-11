@@ -21,8 +21,8 @@ pipeline {
 
                 stage('Checkout') {
                     steps {
-                        sh 'rm -rf repoTEST'
-                        sh 'git clone https://github.com/mabizariikram/practiceTest.git repoTEST'
+                        sh 'rm -rf repoTEST_showreporter'
+                        sh 'git clone https://github.com/mabizariikram/practiceTest.git repoTEST_showreporter'
                     }
                 }
 
