@@ -33,16 +33,12 @@ pipeline {
                 stage('Run Tests') {
                     steps {
                         dir('repoTEST_showreporter') {
-                            sh 'rm -rf playwright-report'
-                            sh "npx playwright test --grep ${params.TAG} --reporter=html"
+                            script {
+                                sh 'rm -rf $WORKSPACE/playwright-report'
+                                // Générer le rapport directement dans le workspace principal
+                                sh "npx playwright test --grep ${params.TAG} --reporter=html --output=$WORKSPACE/playwright-report"
+                            }
                         }
-                    }
-                }
-
-                stage('Copy Report') {
-                    steps {
-                        // Copier le rapport vers le workspace principal pour publishHTML
-                        sh 'cp -r repoTEST_showreporter/playwright-report $WORKSPACE/playwright-report'
                     }
                 }
             }
@@ -53,6 +49,7 @@ pipeline {
         always {
             script {
                 if(params.REPORT) {
+                    // Publier le rapport HTML
                     publishHTML(target: [
                         reportDir: 'playwright-report',
                         reportFiles: 'index.html',
