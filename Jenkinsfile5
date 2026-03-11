@@ -1,55 +1,62 @@
 pipeline {
     agent any
-
     parameters {
-        choice(name: 'TAG', choices: ['@regression', '@smoke'], description: 'Quel tag exécuter')
-        booleanParam(name: 'REPORT', defaultValue: true, description: 'Afficher le rapport Playwright')
+        // variable pour choisir le tag de test
+        choice(name: 'TAG', choices: ['@regression', '@smoke'], description: 'Choisir quel tag exécuter')
+        // variable pour afficher le rapport Playwright HTML
+        booleanParam(name: 'REPORT', defaultValue: true, description: 'Afficher rapport Playwright HTML')
     }
-
     stages {
-        stage('Checkout') {
-            steps {
-                sh 'rm -rf repoTEST_showreporter'
-                sh 'git clone https://github.com/mabizariikram/practiceTest.git repoTEST_showreporter'
-            }
-        }
-
-        stage('Install Dependencies') {
-            steps {
-                dir('repoTEST_showreporter') {
-                    sh 'npm ci'
+        stage('global stage') {
+            agent {
+                docker {
+                    image 'mcr.microsoft.com/playwright:v1.58.2-noble'
+                    args '-u root --entrypoint='
                 }
             }
-        }
-
-        stage('Run Tests') {
-            steps {
-                dir('repoTEST_showreporter') {
-                    script {
-                        // Supprime l'ancien rapport
-                        sh 'rm -rf playwright-report'
-
-                        // Exécute les tests avec reporter HTML (simple)
-                        sh "npx playwright test --grep ${params.TAG} --reporter=html"
-
-                        // Copier le rapport vers le workspace Jenkins principal
-                        sh 'cp -r playwright-report $WORKSPACE/playwright-report'
+            stages {
+                stage('Checkout') {
+                    steps {
+                        // Supprimer le dossier repoTEST_showreporter s'il existe déjà
+                        sh 'rm -rf repoTEST_showreporter'
+                        // Cloner le dépôt dans le dossier repoTEST_showreporter
+                        sh 'git clone https://github.com/mabizariikram/practiceTest.git repoTEST_showreporter'
+                    }
+                }
+                stage('Install Dependencies') {
+                    steps {
+                        dir('repoTEST_showreporter') {
+                            sh 'npm ci'
+                        }
+                    }
+                }
+                stage('Run Tests') {
+                    steps {
+                        dir('repoTEST_showreporter') {
+                            script {
+                                // Supprimer l'ancien rapport
+                                sh 'rm -rf playwright-report'
+                                // Exécuter les tests Playwright avec HTML reporter
+                                sh "npx playwright test --grep ${params.TAG} --reporter=html"
+                                // Copier le rapport vers le workspace principal pour publishHTML
+                                sh "cp -r playwright-report $WORKSPACE/playwright-report"
+                            }
+                        }
                     }
                 }
             }
         }
     }
-
     post {
         always {
             script {
-                if(params.REPORT){
-                    // Publier le rapport HTML dans Jenkins
+                if(params.REPORT) {
+                    // Publier le rapport HTML Playwright
                     publishHTML(target: [
                         reportDir: 'playwright-report',
                         reportFiles: 'index.html',
                         reportName: "Playwright HTML Report",
-                        allowMissing: false,
+                        allowMissing: true,
                         alwaysLinkToLastBuild: true
                     ])
                 }
