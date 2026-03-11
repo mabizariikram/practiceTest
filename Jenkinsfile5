@@ -1,45 +1,40 @@
 pipeline {
     agent any
 
-    parameters {
-        choice(name: 'TAG', choices: ['@regression', '@smoke'])
-        booleanParam(name: 'REPORT', defaultValue: true, description: 'Afficher rapport Playwright')
+    environment {
+        DOCKER_IMAGE = 'mcr.microsoft.com/playwright:v1.58.2-noble'
     }
 
     stages {
-        stage('global stage') {
-            agent {
-                docker {
-                    image 'mcr.microsoft.com/playwright:v1.58.2-noble'
-                    args '-u root --entrypoint='
+        stage('Checkout SCM') {
+            steps {
+                checkout scm
+            }
+        }
+
+        stage('Install Dependencies') {
+            steps {
+                dir('repoTEST_showreporter') {
+                    sh 'npm ci'
                 }
             }
+        }
 
-            stages {
-                stage('Checkout') {
-                    steps {
-                        sh 'rm -rf repoTEST_showreporter'
-                        sh 'git clone https://github.com/mabizariikram/practiceTest.git repoTEST_showreporter'
-                    }
-                }
+        stage('Run Tests in Docker') {
+            steps {
+                dir('repoTEST_showreporter') {
+                    script {
+                        // Supprime l'ancien rapport
+                        sh 'rm -rf playwright-report'
 
-                stage('install deps') {
-                    steps {
-                        dir('repoTEST_showreporter') {
-                            sh 'npm ci'
-                        }
-                    }
-                }
+                        // Exécute les tests Playwright dans Docker
+                        sh """
+                        docker run --rm -u $(id -u):$(id -g) -v \$(pwd):/work -w /work ${DOCKER_IMAGE} \
+                        npx playwright test --grep @regression --reporter=html
+                        """
 
-                stage('run tests') {
-                    steps {
-                        dir('repoTEST_showreporter') {
-                            script {
-                                sh 'rm -rf playwright-report'
-                                // Correct : simple HTML reporter
-                                sh "npx playwright test --grep ${params.TAG} --reporter=html"
-                            }
-                        }
+                        // Copier le rapport vers le workspace Jenkins pour qu'il soit accessible
+                        sh 'cp -r playwright-report $WORKSPACE/playwright-report'
                     }
                 }
             }
@@ -48,19 +43,14 @@ pipeline {
 
     post {
         always {
-            script {
-                if(params.REPORT){
-                    dir('repoTEST_showreporter') {
-                        publishHTML(target: [
-                            reportDir: 'playwright-report', // <-- juste le nom du dossier
-                            reportFiles: 'index.html',
-                            reportName: "Playwright Report",
-                            allowMissing: true,
-                            alwaysLinkToLastBuild: true
-                        ])
-                    }
-                }
-            }
+            // Publier le rapport HTML
+            publishHTML(target: [
+                reportDir: 'playwright-report',
+                reportFiles: 'index.html',
+                reportName: "Playwright HTML Report",
+                allowMissing: true,
+                alwaysLinkToLastBuild: true
+            ])
         }
     }
 }
