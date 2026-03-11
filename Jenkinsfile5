@@ -4,23 +4,29 @@ pipeline {
     stages {
         stage('Checkout') {
             steps {
+                // On supprime l'ancien repo et on clone proprement
                 sh 'rm -rf repoTEST_showreporter'
                 sh 'git clone https://github.com/mabizariikram/practiceTest.git repoTEST_showreporter'
             }
         }
 
-        stage('Install & Test') {
+        stage('Install & Run Tests') {
             agent {
                 docker {
                     image 'mcr.microsoft.com/playwright:v1.58.2-noble'
-                    args '-u root:root'  // pour éviter les problèmes de permissions
+                    args '-u root:root'
                 }
             }
             steps {
                 dir('repoTEST_showreporter') {
+                    // Installer les dépendances
                     sh 'npm ci'
-                    sh 'rm -rf $WORKSPACE/playwright-report'
-                    sh 'npx playwright test --grep @regression --reporter=html --output=$WORKSPACE/playwright-report'
+
+                    // Supprimer l'ancien rapport si existant
+                    sh 'rm -rf ../playwright-report'
+
+                    // Lancer les tests et générer le rapport dans ../playwright-report
+                    sh 'npx playwright test --grep @regression --reporter=html --output=../playwright-report'
                 }
             }
         }
@@ -28,12 +34,11 @@ pipeline {
 
     post {
         always {
+            // Publier le rapport HTML depuis le dossier à la racine du job
             publishHTML(target: [
-                reportDir: "$WORKSPACE/playwright-report",
+                reportDir: 'playwright-report',
                 reportFiles: 'index.html',
-                reportName: "Playwright HTML Report",
-                allowMissing: false,
-                alwaysLinkToLastBuild: true
+                reportName: 'Playwright HTML Report'
             ])
         }
     }
