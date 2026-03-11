@@ -9,17 +9,16 @@ pipeline {
             }
         }
 
-        stage('Install Dependencies') {
+        stage('Install & Test') {
+            agent {
+                docker {
+                    image 'mcr.microsoft.com/playwright:v1.58.2-noble'
+                    args '-u root:root'  // pour éviter les problèmes de permissions
+                }
+            }
             steps {
                 dir('repoTEST_showreporter') {
                     sh 'npm ci'
-                }
-            }
-        }
-
-        stage('Run Tests') {
-            steps {
-                dir('repoTEST_showreporter') {
                     sh 'rm -rf $WORKSPACE/playwright-report'
                     sh 'npx playwright test --grep @regression --reporter=html --output=$WORKSPACE/playwright-report'
                 }
