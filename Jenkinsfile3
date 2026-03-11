@@ -57,7 +57,11 @@ pipeline {
                 if(params.ALLURE){
                     dir('repo_test') {
 
-                        sh 'rm -rf allure-results'
+                        
+                        sh 'chmod -R 777 . || true'
+
+                        sh 'rm -rf allure-results || true'
+
                         unstash 'allure-results'
 
                         archiveArtifacts artifacts: 'allure-results/**', fingerprint: true
