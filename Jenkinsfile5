@@ -46,14 +46,17 @@ pipeline {
         }
     }
 
-    post {
+     post {
         always {
             script {
-                if(params.REPORT){
-                    dir('repoTEST_showreporter'){
-                        // Archiver le dossier généré par Playwright
-                        archiveArtifacts artifacts: 'playwright-report/**', fingerprint: true
-                    }
+                dir('repoTEST_showreporter/playwright-report') {
+                    publishHTML(target: [
+                        reportDir: '.',
+                        reportFiles: 'index.html',
+                        reportName: "Playwright Report",
+                        allowMissing: true,
+                        alwaysLinkToLastBuild: true
+                    ])
                 }
             }
         }
