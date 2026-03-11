@@ -59,20 +59,30 @@ pipeline {
         }
     }
 
-    post {
-        always {
-            dir('repoHTML') {
-                script {
-                    // Vérifie si le dossier existe avant d'archiver
-                    if (fileExists('playwright-report/index.html')) {
-                        archiveArtifacts artifacts: 'playwright-report/**', fingerprint: true
-                        echo "HTML report archived."
-                    } else {
-                        echo "No HTML report found to archive."
-                    }
+   post {
+    always {
+        dir('repoHTML') {
+            script {
+                // Vérifie si le rapport existe avant d'archiver
+                if (fileExists('playwright-report/index.html')) {
+                    archiveArtifacts artifacts: 'playwright-report/**', fingerprint: true
+                    echo "HTML report archived."
+
+                    // <-- Ajouter ici le publishHTML pour voir le rapport directement dans Jenkins
+                    publishHTML([
+                        allowMissing: true,
+                        alwaysLinkToLastBuild: true,
+                        keepAll: true,
+                        reportDir: 'playwright-report',
+                        reportFiles: 'index.html',
+                        reportName: 'Playwright HTML Report'
+                    ])
+                } else {
+                    echo "No HTML report found to archive."
                 }
             }
         }
     }
+}
 
 }
