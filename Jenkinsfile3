@@ -1,51 +1,59 @@
 pipeline {
-    agent {
-        docker {
-            image 'mcr.microsoft.com/playwright:v1.58.2-noble'
-            args '-u root --entrypoint='
-        }
-    }
+    agent any
 
     parameters {
-        choice(name: 'BROWSER', choices: ['chromium','firefox','webkit'], description: 'Choisir navigateur')
-        booleanParam(name: 'ALLURE', defaultValue: false, description: 'Générer rapport Allure')
-        choice(name:'TAG', choices: ['@regression','@smoke','@e2e'], description: 'Choisir tag')
+        choice(name: 'BROWSER', choices: ['chromium','firefox','webkit'])
+        booleanParam(name: 'ALLURE', defaultValue: false)
+        choice(name:'TAG', choices: ['@regression','@smoke','@e2e'])
     }
 
     stages {
 
-        stage('Clone repo') {
-            steps {
-                sh 'rm -rf repo_test'
-                sh 'git clone https://github.com/mabizariikram/practiceTest.git repo_test'
-            }
-        }
+        stage('Playwright Tests') {
 
-        stage('Install dependencies') {
-            steps {
-                dir('repo_test') {
-                    sh 'npm ci'
+            agent {
+                docker {
+                    image 'mcr.microsoft.com/playwright:v1.58.2-noble'
+                    args '-u root --entrypoint='
                 }
             }
-        }
 
-        stage('Run tests') {
-            steps {
-                dir('repo_test') {
-                    script {
+            stages {
 
-                        sh 'rm -rf allure-results'
-                        sh 'mkdir -p allure-results'
-
-                        if(params.ALLURE){
-                            sh "npx playwright test --project=${params.BROWSER} --grep ${params.TAG} --reporter=allure-playwright"
-                            stash name: 'allure-results', includes: 'allure-results/**'
-                        } else {
-                            sh "npx playwright test --project=${params.BROWSER} --grep ${params.TAG}"
-                        }
-
+                stage('Clone repo') {
+                    steps {
+                        sh 'rm -rf repo_test'
+                        sh 'git clone https://github.com/mabizariikram/practiceTest.git repo_test'
                     }
                 }
+
+                stage('Install deps') {
+                    steps {
+                        dir('repo_test') {
+                            sh 'npm ci'
+                        }
+                    }
+                }
+
+                stage('Run tests') {
+                    steps {
+                        dir('repo_test') {
+                            script {
+
+                                sh 'rm -rf allure-results'
+                                sh 'mkdir -p allure-results'
+
+                                if(params.ALLURE){
+                                    sh "npx playwright test --project=${params.BROWSER} --grep ${params.TAG} --reporter=allure-playwright"
+                                    stash name: 'allure-results', includes: 'allure-results/**'
+                                } else {
+                                    sh "npx playwright test --project=${params.BROWSER} --grep ${params.TAG}"
+                                }
+                            }
+                        }
+                    }
+                }
+
             }
         }
     }
@@ -55,21 +63,18 @@ pipeline {
             script {
 
                 if(params.ALLURE){
+
                     dir('repo_test') {
 
-                        
-                        sh 'chmod -R 777 . || true'
-
-                        sh 'rm -rf allure-results || true'
-
+                        sh 'rm -rf allure-results'
                         unstash 'allure-results'
 
                         archiveArtifacts artifacts: 'allure-results/**', fingerprint: true
 
                         allure results: [[path: 'allure-results']]
                     }
-                }
 
+                }
             }
         }
     }
