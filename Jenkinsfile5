@@ -34,8 +34,8 @@ pipeline {
                     steps {
                         dir('repoTEST_showreporter') {
                             script {
-                                sh 'rm -rf $WORKSPACE/playwright-report'
                                 // Générer le rapport directement dans le workspace principal
+                                sh 'rm -rf $WORKSPACE/playwright-report'
                                 sh "npx playwright test --grep ${params.TAG} --reporter=html --output=$WORKSPACE/playwright-report"
                             }
                         }
@@ -48,10 +48,10 @@ pipeline {
     post {
         always {
             script {
-                if(params.REPORT) {
+                if (params.REPORT) {
                     // Publier le rapport HTML
                     publishHTML(target: [
-                        reportDir: 'playwright-report',
+                        reportDir: "$WORKSPACE/playwright-report",
                         reportFiles: 'index.html',
                         reportName: "Playwright HTML Report",
                         allowMissing: false,
