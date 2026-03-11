@@ -5,10 +5,7 @@ pipeline {
             args '-u root --entrypoint='
         }
     }
-    tools {
-        allure 'allure'
-    }
-
+   
     parameters {
         choice(name: 'BROWSER', choices: ['chromium', 'firefox', 'webkit'], description: 'Choisir le navigateur pour les tests')
         booleanParam(name: 'ALLURE', defaultValue: false, description: 'Générer le rapport Allure ou pas')
