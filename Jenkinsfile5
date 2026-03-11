@@ -13,10 +13,13 @@ pipeline {
                     args '-u root --entrypoint='
                 }
             }
+
             stages {
                 stage('Checkout') {
                     steps {
+                        // Supprimer le dossier s'il existe déjà
                         sh 'rm -rf repoTEST_showreporter'
+                        // Cloner le dépôt dans le container
                         sh 'git clone https://github.com/mabizariikram/practiceTest.git repoTEST_showreporter'
                     }
                 }
@@ -54,8 +57,9 @@ pipeline {
         always {
             script {
                 if(params.REPORT) {
+                    // Publier le rapport HTML depuis le workspace principal
                     publishHTML(target: [
-                        reportDir: 'playwright-report',   // maintenant présent dans le workspace principal
+                        reportDir: 'playwright-report',
                         reportFiles: 'index.html',
                         reportName: "Playwright HTML Report",
                         allowMissing: true,
