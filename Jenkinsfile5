@@ -1,5 +1,10 @@
 pipeline {
-    agent any
+    agent {
+        docker {
+            image 'mcr.microsoft.com/playwright:v1.58.2-noble'
+            args '-u root --entrypoint='
+        }
+    }
 
     stages {
         stage('Checkout') {
@@ -11,8 +16,10 @@ pipeline {
         stage('Install & Run Tests') {
             steps {
                 dir('repoTEST_showreporter') {
+                    // Installe les dépendances Node
                     sh 'npm ci'
-                    // génère le rapport DANS repoTEST_showreporter/playwright-report
+
+                    // Lancer les tests Playwright pour le tag @regression et générer le rapport HTML
                     sh 'npx playwright test --grep @regression --reporter=html --output=playwright-report'
                 }
             }
@@ -21,9 +28,9 @@ pipeline {
 
     post {
         always {
-            // publie le rapport depuis repoTEST_showreporter/playwright-report
+            // Publier le rapport depuis repoTEST_showreporter/playwright-report
             publishHTML(target: [
-                reportDir: 'repoTEST_showreporter/playwright-report',  // <-- chemin correct
+                reportDir: 'repoTEST_showreporter/playwright-report',  // chemin correct
                 reportFiles: 'index.html',
                 reportName: 'Playwright HTML Report'
             ])
