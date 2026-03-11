@@ -20,11 +20,9 @@ pipeline {
                     // Installe les dépendances Node
                     sh 'npm ci'
 
-                    // Lance les tests Playwright avec le tag @regression et génère le rapport HTML
-                    sh 'npx playwright test --grep @regression --reporter=html --output=playwright-report'
-
-                    // Copie le rapport complet dans le workspace racine pour Jenkins
-                    sh 'cp -r playwright-report $WORKSPACE/playwright-report'
+                    // Lance les tests Playwright avec le tag @regression
+                    // et génère le rapport directement dans le workspace Jenkins
+                    sh 'npx playwright test --grep @regression --reporter=html --output=$WORKSPACE/playwright-report'
                 }
             }
         }
@@ -34,7 +32,7 @@ pipeline {
         always {
             // Publie le rapport HTML dans Jenkins
             publishHTML(target: [
-                reportDir: 'playwright-report',       // dossier complet au workspace racine
+                reportDir: 'playwright-report',       // le dossier complet contenant index.html et CSS/JS
                 reportFiles: 'index.html',
                 reportName: 'Playwright HTML Report',
                 keepAll: true,
