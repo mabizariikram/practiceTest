@@ -1,45 +1,27 @@
 pipeline {
     agent any
-    parameters {
-        choice(name: 'TAG', choices: ['@regression', '@smoke'], description: 'Choisir quel tag exécuter')
-        booleanParam(name: 'REPORT', defaultValue: true, description: 'Afficher rapport Playwright HTML')
-    }
 
     stages {
-        stage('global stage') {
-            agent {
-                docker {
-                    image 'mcr.microsoft.com/playwright:v1.58.2-noble'
-                    args '-u root --entrypoint='
+        stage('Checkout') {
+            steps {
+                sh 'rm -rf repoTEST_showreporter'
+                sh 'git clone https://github.com/mabizariikram/practiceTest.git repoTEST_showreporter'
+            }
+        }
+
+        stage('Install Dependencies') {
+            steps {
+                dir('repoTEST_showreporter') {
+                    sh 'npm ci'
                 }
             }
+        }
 
-            stages {
-                stage('Checkout') {
-                    steps {
-                        sh 'rm -rf repoTEST_showreporter'
-                        sh 'git clone https://github.com/mabizariikram/practiceTest.git repoTEST_showreporter'
-                    }
-                }
-
-                stage('Install Dependencies') {
-                    steps {
-                        dir('repoTEST_showreporter') {
-                            sh 'npm ci'
-                        }
-                    }
-                }
-
-                stage('Run Tests') {
-                    steps {
-                        dir('repoTEST_showreporter') {
-                            script {
-                                // Générer le rapport directement dans le workspace principal
-                                sh 'rm -rf $WORKSPACE/playwright-report'
-                                sh "npx playwright test --grep ${params.TAG} --reporter=html --output=$WORKSPACE/playwright-report"
-                            }
-                        }
-                    }
+        stage('Run Tests') {
+            steps {
+                dir('repoTEST_showreporter') {
+                    sh 'rm -rf $WORKSPACE/playwright-report'
+                    sh 'npx playwright test --grep @regression --reporter=html --output=$WORKSPACE/playwright-report'
                 }
             }
         }
@@ -47,18 +29,13 @@ pipeline {
 
     post {
         always {
-            script {
-                if (params.REPORT) {
-                    // Publier le rapport HTML depuis le workspace correct
-                    publishHTML(target: [
-                        reportDir: "$WORKSPACE/playwright-report",
-                        reportFiles: 'index.html',
-                        reportName: "Playwright HTML Report",
-                        allowMissing: false,
-                        alwaysLinkToLastBuild: true
-                    ])
-                }
-            }
+            publishHTML(target: [
+                reportDir: "$WORKSPACE/playwright-report",
+                reportFiles: 'index.html',
+                reportName: "Playwright HTML Report",
+                allowMissing: false,
+                alwaysLinkToLastBuild: true
+            ])
         }
     }
 }
