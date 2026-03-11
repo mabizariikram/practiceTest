@@ -25,7 +25,8 @@ export default defineConfig({
   //reporter: 'html',
   reporter: [
   ['list'],                 // affiche l'exécution des tests dans le terminal
-  ['allure-playwright']     // génère les fichiers de résultats Allure
+  ['allure-playwright'],     // génère les fichiers de résultats Allure
+  ['html', { outputFolder: 'playwright-report', open: 'never' }], // HTML natif
 ],
 
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
