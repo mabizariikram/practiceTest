@@ -6,9 +6,14 @@ pipeline {
         }
     }
 
+    environment {
+        WORKSPACE_DIR = "${env.WORKSPACE}"
+    }
+
     stages {
         stage('Checkout') {
             steps {
+                // Clone le dépôt principal
                 git url: 'https://github.com/mabizariikram/practiceTest.git', branch: 'master'
             }
         }
@@ -19,16 +24,21 @@ pipeline {
                     // Installe les dépendances Node
                     sh 'npm ci'
 
-                    // Lancer les tests Playwright pour le tag @regression et générer le rapport HTML
+                    // Lance les tests Playwright avec le tag @regression et génère le rapport HTML
                     sh 'npx playwright test --grep @regression --reporter=html --output=playwright-report'
+
+                    // Copie le rapport dans le workspace racine pour Jenkins
+                    sh "cp -r playwright-report ${WORKSPACE_DIR}/playwright-report"
                 }
             }
         }
     }
+
     post {
         always {
+            // Publie le rapport HTML depuis le workspace racine
             publishHTML(target: [
-                reportDir: 'repoTEST_showreporter/playwright-report',  // chemin relatif complet
+                reportDir: 'playwright-report',   // maintenant au workspace racine
                 reportFiles: 'index.html',
                 reportName: 'Playwright HTML Report',
                 keepAll: true,
@@ -36,6 +46,4 @@ pipeline {
             ])
         }
     }
-  
-   
 }
