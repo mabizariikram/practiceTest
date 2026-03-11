@@ -25,15 +25,16 @@ pipeline {
             }
         }
     }
-
     post {
         always {
-            // Publier le rapport depuis repoTEST_showreporter/playwright-report
-            publishHTML(target: [
-                reportDir: 'repoTEST_showreporter/playwright-report',  // chemin correct
-                reportFiles: 'index.html',
-                reportName: 'Playwright HTML Report'
-            ])
+            dir('repoTEST_showreporter') {
+                publishHTML(target: [
+                    reportDir: 'playwright-report',  // relatif à repoTEST_showreporter
+                    reportFiles: 'index.html',
+                    reportName: 'Playwright HTML Report'
+                ])
+            }
         }
     }
+   
 }
