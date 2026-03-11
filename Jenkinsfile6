@@ -2,7 +2,7 @@ pipeline {
     agent any
 
     parameters {
-        choice(name: 'TAG', choices: ['@regression', '@smoke'], description: 'Choisir tag de test')
+        choice(name: 'TAG', choices: ['@regression', '@smoke'], description: 'Choisir le tag de test')
         booleanParam(name: 'HTML_REPORT', defaultValue: true, description: 'Générer rapport HTML')
     }
 
@@ -21,14 +21,15 @@ pipeline {
 
                 stage('Checkout') {
                     steps {
-                        sh 'rm -rf repoTEST'
-                        sh 'git clone https://github.com/mabizariikram/practiceTest.git repoTEST'
+                        // Changer le nom du dossier du repo
+                        sh 'rm -rf repoHTML'
+                        sh 'git clone https://github.com/mabizariikram/practiceTest.git repoHTML'
                     }
                 }
 
                 stage('Install dependencies') {
                     steps {
-                        dir('repoTEST') {
+                        dir('repoHTML') {
                             sh 'npm ci'
                         }
                     }
@@ -36,34 +37,21 @@ pipeline {
 
                 stage('Run tests') {
                     steps {
-
-                        dir('repoTEST') {
-
+                        dir('repoHTML') {
                             script {
-
                                 sh 'rm -rf playwright-report'
 
                                 if(params.HTML_REPORT){
-
                                     sh """
                                     npx playwright test \
                                     --grep ${params.TAG} \
                                     --reporter=html
                                     """
-
                                 } else {
-
-                                    sh """
-                                    npx playwright test \
-                                    --grep ${params.TAG}
-                                    """
-
+                                    sh "npx playwright test --grep ${params.TAG}"
                                 }
-
                             }
-
                         }
-
                     }
                 }
 
@@ -72,17 +60,19 @@ pipeline {
     }
 
     post {
-
         always {
-
-            dir('repoTEST') {
-
-                archiveArtifacts artifacts: 'playwright-report/**', fingerprint: true
-
+            dir('repoHTML') {
+                script {
+                    // Vérifie si le dossier existe avant d'archiver
+                    if (fileExists('playwright-report/index.html')) {
+                        archiveArtifacts artifacts: 'playwright-report/**', fingerprint: true
+                        echo "HTML report archived."
+                    } else {
+                        echo "No HTML report found to archive."
+                    }
+                }
             }
-
         }
-
     }
 
 }
