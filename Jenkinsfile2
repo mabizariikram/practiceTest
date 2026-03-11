@@ -18,6 +18,14 @@ pipeline {
             steps {
                 sh 'npm --version'
                 sh 'npm install'
+
+                // installer JAVA pour Allure
+                sh '''
+                apt-get update
+                apt-get install -y default-jre
+                '''
+
+                // installer allure CLI
                 sh 'npm install -g allure-commandline'
             }
         }
@@ -48,14 +56,13 @@ pipeline {
 
                     echo "Generating Allure report"
 
-                    sh """
+                    sh '''
                     if [ -d allure-results ]; then
                        allure generate allure-results -o allure-report --clean
                     fi
-                    """
+                    '''
 
                     archiveArtifacts artifacts: 'allure-report/**', fingerprint: true
-
                 }
 
             }
