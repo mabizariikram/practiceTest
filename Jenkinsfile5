@@ -6,10 +6,6 @@ pipeline {
         }
     }
 
-    environment {
-        WORKSPACE_DIR = "${env.WORKSPACE}"
-    }
-
     stages {
         stage('Checkout') {
             steps {
@@ -27,8 +23,8 @@ pipeline {
                     // Lance les tests Playwright avec le tag @regression et génère le rapport HTML
                     sh 'npx playwright test --grep @regression --reporter=html --output=playwright-report'
 
-                    // Copie le rapport dans le workspace racine pour Jenkins
-                    sh "cp -r playwright-report ${WORKSPACE_DIR}/playwright-report"
+                    // Copie le rapport complet dans le workspace racine pour Jenkins
+                    sh 'cp -r playwright-report $WORKSPACE/playwright-report'
                 }
             }
         }
@@ -36,14 +32,17 @@ pipeline {
 
     post {
         always {
-            // Publie le rapport HTML depuis le workspace racine
+            // Publie le rapport HTML dans Jenkins
             publishHTML(target: [
-                reportDir: 'playwright-report',   // maintenant au workspace racine
+                reportDir: 'playwright-report',       // dossier complet au workspace racine
                 reportFiles: 'index.html',
                 reportName: 'Playwright HTML Report',
                 keepAll: true,
                 allowMissing: false
             ])
+
+            // Archive les fichiers pour téléchargement si besoin
+            archiveArtifacts artifacts: 'playwright-report/**', fingerprint: true
         }
     }
 }
