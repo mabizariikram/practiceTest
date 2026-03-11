@@ -1,0 +1,88 @@
+pipeline {
+    agent any
+
+    parameters {
+        choice(name: 'TAG', choices: ['@regression', '@smoke'], description: 'Choisir tag de test')
+        booleanParam(name: 'HTML_REPORT', defaultValue: true, description: 'Générer rapport HTML')
+    }
+
+    stages {
+
+        stage('global stage') {
+
+            agent {
+                docker {
+                    image 'mcr.microsoft.com/playwright:v1.58.2-noble'
+                    args '-u root --entrypoint='
+                }
+            }
+
+            stages {
+
+                stage('Checkout') {
+                    steps {
+                        sh 'rm -rf repoTEST'
+                        sh 'git clone https://github.com/mabizariikram/practiceTest.git repoTEST'
+                    }
+                }
+
+                stage('Install dependencies') {
+                    steps {
+                        dir('repoTEST') {
+                            sh 'npm ci'
+                        }
+                    }
+                }
+
+                stage('Run tests') {
+                    steps {
+
+                        dir('repoTEST') {
+
+                            script {
+
+                                sh 'rm -rf playwright-report'
+
+                                if(params.HTML_REPORT){
+
+                                    sh """
+                                    npx playwright test \
+                                    --grep ${params.TAG} \
+                                    --reporter=html
+                                    """
+
+                                } else {
+
+                                    sh """
+                                    npx playwright test \
+                                    --grep ${params.TAG}
+                                    """
+
+                                }
+
+                            }
+
+                        }
+
+                    }
+                }
+
+            }
+        }
+    }
+
+    post {
+
+        always {
+
+            dir('repoTEST') {
+
+                archiveArtifacts artifacts: 'playwright-report/**', fingerprint: true
+
+            }
+
+        }
+
+    }
+
+}
