@@ -49,6 +49,13 @@ pipeline {
                         sh 'cp -r repoTEST_showreporter/playwright-report $WORKSPACE/playwright-report'
                     }
                 }
+
+                stage('Debug: lister workspace') {
+                    steps {
+                        sh 'echo "=== Contenu du workspace principal ==="'
+                        sh 'ls -R $WORKSPACE'
+                    }
+                }
             }
         }
     }
