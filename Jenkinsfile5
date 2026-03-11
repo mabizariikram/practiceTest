@@ -33,11 +33,8 @@ pipeline {
                         sh 'rm -rf playwright-report'
 
                         // Exécution des tests dans Docker avec HTML reporter
-                        sh """
-                        docker run --rm -u $(id -u):$(id -g) \\
-                        -v \$(pwd):/work -w /work ${DOCKER_IMAGE} \\
-                        npx playwright test --grep ${params.TAG} --reporter=html
-                        """
+                        sh 'npx playwright test --grep ${params.TAG} --reporter=html'
+                    
 
                         // Copier le rapport généré vers le workspace principal
                         sh "cp -r playwright-report $WORKSPACE/playwright-report"
