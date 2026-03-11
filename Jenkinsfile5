@@ -1,9 +1,7 @@
 pipeline {
     agent any
     parameters {
-        // Variable pour choisir le tag de test
         choice(name: 'TAG', choices: ['@regression', '@smoke'], description: 'Choisir quel tag exécuter')
-        // Variable pour afficher le rapport Playwright HTML
         booleanParam(name: 'REPORT', defaultValue: true, description: 'Afficher rapport Playwright HTML')
     }
 
@@ -18,9 +16,7 @@ pipeline {
             stages {
                 stage('Checkout') {
                     steps {
-                        // Supprimer le dossier s'il existe déjà
                         sh 'rm -rf repoTEST_showreporter'
-                        // Cloner le dépôt
                         sh 'git clone https://github.com/mabizariikram/practiceTest.git repoTEST_showreporter'
                     }
                 }
@@ -37,12 +33,17 @@ pipeline {
                     steps {
                         dir('repoTEST_showreporter') {
                             script {
-                                // Supprimer l'ancien rapport
                                 sh 'rm -rf playwright-report'
-                                // Exécuter les tests Playwright avec HTML reporter
                                 sh "npx playwright test --grep ${params.TAG} --reporter=html"
                             }
                         }
+                    }
+                }
+
+                stage('Copy Report to Main Workspace') {
+                    steps {
+                        // Copier le rapport hors du container Docker vers le workspace principal
+                        sh 'cp -r repoTEST_showreporter/playwright-report $WORKSPACE/playwright-report'
                     }
                 }
             }
@@ -53,10 +54,9 @@ pipeline {
         always {
             script {
                 if(params.REPORT) {
-                    // Publier le rapport HTML directement depuis le dossier généré
                     publishHTML(target: [
-                        reportDir: "repoTEST_showreporter/playwright-report",
-                        reportFiles: "index.html",
+                        reportDir: 'playwright-report',   // maintenant présent dans le workspace principal
+                        reportFiles: 'index.html',
                         reportName: "Playwright HTML Report",
                         allowMissing: true,
                         alwaysLinkToLastBuild: true
