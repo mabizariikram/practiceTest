@@ -10,8 +10,7 @@ pipeline {
             agent {
                 docker {
                     image 'mcr.microsoft.com/playwright:v1.58.2-noble'
-                    // Monter le workspace principal pour que le rapport soit accessible hors du container
-                    args '-u root --entrypoint= -v $WORKSPACE:$WORKSPACE'
+                    args '-u root --entrypoint='
                 }
             }
 
@@ -39,6 +38,13 @@ pipeline {
                         }
                     }
                 }
+
+                stage('Copy Report') {
+                    steps {
+                        // Copier le rapport vers le workspace principal pour publishHTML
+                        sh 'cp -r repoTEST_showreporter/playwright-report $WORKSPACE/playwright-report'
+                    }
+                }
             }
         }
     }
@@ -47,12 +53,11 @@ pipeline {
         always {
             script {
                 if(params.REPORT) {
-                    // Publier le rapport HTML depuis le workspace principal
                     publishHTML(target: [
-                        reportDir: 'repoTEST_showreporter/playwright-report',
+                        reportDir: 'playwright-report',
                         reportFiles: 'index.html',
                         reportName: "Playwright HTML Report",
-                        allowMissing: true,
+                        allowMissing: false,
                         alwaysLinkToLastBuild: true
                     ])
                 }
