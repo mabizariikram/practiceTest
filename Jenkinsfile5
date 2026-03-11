@@ -46,17 +46,19 @@ pipeline {
         }
     }
 
-        post {
+    post {
         always {
             script {
-                dir('repoTEST_showreporter/playwright-report') {
-                    publishHTML(target: [
-                        reportDir: '.',
-                        reportFiles: 'index.html',
-                        reportName: "Playwright Report",
-                        allowMissing: true,
-                        alwaysLinkToLastBuild: true
-                    ])
+                if(params.REPORT){
+                    dir('repoTEST_showreporter') {
+                        publishHTML(target: [
+                            reportDir: 'playwright-report', // <-- juste le nom du dossier
+                            reportFiles: 'index.html',
+                            reportName: "Playwright Report",
+                            allowMissing: true,
+                            alwaysLinkToLastBuild: true
+                        ])
+                    }
                 }
             }
         }
