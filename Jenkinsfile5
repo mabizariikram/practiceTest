@@ -36,8 +36,12 @@ pipeline {
                         dir('repoTEST_showreporter') {
                             script {
                                 sh 'rm -rf playwright-report'
-                                // Exécute les tests avec le reporter HTML
+                                
+                                // Exécute les tests dans Docker et génère le HTML
                                 sh "npx playwright test --grep ${params.TAG} --reporter=html"
+
+                                // Copier le rapport dans le workspace Jenkins
+                                sh 'cp -r playwright-report $WORKSPACE/playwright-report'
                             }
                         }
                     }
@@ -50,11 +54,8 @@ pipeline {
         always {
             script {
                 if(params.REPORT){
-                    dir('repoTEST_showreporter') {
-                        // Archiver les fichiers (optionnel, pour garder les fichiers)
-                        archiveArtifacts artifacts: 'playwright-report/**', fingerprint: true
-                        
-                        // Publier le rapport HTML pour Jenkins
+                    dir('.') {
+                        // Publier le rapport HTML
                         publishHTML(target: [
                             reportDir: 'playwright-report',
                             reportFiles: 'index.html',
