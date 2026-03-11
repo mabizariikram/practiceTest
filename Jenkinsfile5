@@ -7,9 +7,7 @@ pipeline {
     }
 
     stages {
-
         stage('global stage') {
-
             agent {
                 docker {
                     image 'mcr.microsoft.com/playwright:v1.58.2-noble'
@@ -18,7 +16,6 @@ pipeline {
             }
 
             stages {
-
                 stage('Checkout') {
                     steps {
                         sh 'rm -rf repoTEST_showreporter'
@@ -36,48 +33,27 @@ pipeline {
 
                 stage('run tests') {
                     steps {
-
                         dir('repoTEST_showreporter') {
-
                             script {
-
                                 sh 'rm -rf playwright-report'
-
-                                sh "npx playwright test --grep ${params.TAG}"
-
+                                sh "npx playwright test --grep ${params.TAG} --reporter=html"
                             }
-
                         }
-
                     }
                 }
-
             }
-
         }
-
     }
 
     post {
-
         always {
-
             script {
-
                 if(params.REPORT){
-
                     dir('repoTEST_showreporter'){
-
                         archiveArtifacts artifacts: 'playwright-report/**', fingerprint: true
-
                     }
-
                 }
-
             }
-
         }
-
     }
-
 }
